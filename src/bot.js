@@ -4,7 +4,6 @@ const User = require('./models/User');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Welcome and subscription logic
 bot.start(async (ctx) => {
     const telegramId = ctx.message.chat.id.toString();
     const firstName = ctx.message.chat.first_name || "User";
@@ -12,52 +11,48 @@ bot.start(async (ctx) => {
     try {
         const existingUser = await User.findOne({ telegramId });
         if (existingUser) {
-            ctx.reply(`Welcome back, ${firstName}! You are already subscribed to receive Qatar Visa Appointment alerts.`);
+            ctx.reply(`Welcome back, ${firstName}. You are currently subscribed.`);
         } else {
             const newUser = new User({ telegramId, firstName });
             await newUser.save();
-            ctx.reply(`Hello ${firstName}! You have successfully subscribed to Qatar Visa Appointment alerts for Islamabad. You will be instantly notified the moment a slot opens up!\n\nUse /status to check monitoring state, or /stop to unsubscribe.`);
-            console.log(`New user subscribed: ${firstName} (${telegramId})`);
+            ctx.reply(`Subscribed successfully. You will be notified when an appointment slot is available.`);
+            console.log(`New subscriber: ${telegramId}`);
         }
     } catch (err) {
-        console.error("Error saving user:", err);
-        ctx.reply("Sorry, there was an error subscribing you to alerts. Please try again.");
+        console.error("Error saving user data:", err);
     }
 });
 
-// Unsubscribe logic
 bot.command('stop', async (ctx) => {
     const telegramId = ctx.message.chat.id.toString();
     try {
         await User.findOneAndDelete({ telegramId });
-        ctx.reply("You have been unsubscribed from Qatar Visa Appointment alerts.");
-        console.log(`User unsubscribed: ${telegramId}`);
+        ctx.reply("You have been unsubscribed.");
+        console.log(`Unsubscribed: ${telegramId}`);
     } catch (err) {
         console.error("Error removing user:", err);
     }
 });
 
-// App status logic
 bot.command('status', async (ctx) => {
     const telegramId = ctx.message.chat.id.toString();
     const user = await User.findOne({ telegramId });
     if (user) {
-        ctx.reply("System Status: ACTIVELY MONITORING 🟢\n\nYou are currently subscribed and waiting for visa appointment alerts! The bot is continuously watching the Qatar Visa Center calendar in the background.");
+        ctx.reply("Service is running and actively checking for calendar slots.");
     } else {
-        ctx.reply("System Status: ACTIVELY MONITORING 🟢\n\nYou are not subscribed to alerts. Send /start to subscribe now.");
+        ctx.reply("Service is running. Send /start to subscribe for updates.");
     }
 });
 
 const startBot = () => {
     if (!process.env.BOT_TOKEN) {
-        console.error("[!] Warning: BOT_TOKEN is not defined in .env. The Telegram bot will not launch.");
+        console.error("BOT_TOKEN is missing from .env");
         return;
     }
     
     bot.launch();
-    console.log("Telegram Alert Bot has successfully launched.");
+    console.log("Telegram bot active.");
 
-    // Enable graceful stop
     process.once('SIGINT', () => bot.stop('SIGINT'));
     process.once('SIGTERM', () => bot.stop('SIGTERM'));
 };
@@ -67,22 +62,18 @@ const notifyAllUsers = async (message) => {
     
     try {
         const users = await User.find({});
-        console.log(`Broadcasting alert to ${users.length} subscribed users...`);
         for (const user of users) {
             try {
                 await bot.telegram.sendMessage(user.telegramId, message);
             } catch (err) {
-                console.error(`Failed to send message to ${user.telegramId}:`, err.message);
-                // Optional: remove user if they blocked the bot
-                if (err.message.includes('bot was blocked by the user') || err.message.includes('chat not found')) {
+                console.error(`Message failed intended for ${user.telegramId}:`, err.message);
+                if (err.message.includes('bot was blocked') || err.message.includes('chat not found')) {
                      await User.findOneAndDelete({ telegramId: user.telegramId });
-                     console.log(`Removed uncontactable user ${user.telegramId}`);
                 }
             }
         }
-        console.log("Broadcast successfully dispatched to all active users.");
     } catch (err) {
-        console.error("Failed to fetch users from database for broadcast:", err);
+        console.error("Broadcast failed:", err);
     }
 };
 
