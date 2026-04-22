@@ -59,9 +59,20 @@ async function playWrightUpdate() {
             await page.locator('input[placeholder="-- Select Country --"]').waitFor({ state: 'visible' });
             await page.locator('input[placeholder="-- Select Country --"]').click();
             await page.getByText("Pakistan").click();
-            
-            await page.locator('a.card-box:has-text("Book Appointment")').waitFor({ state: 'visible' });
-            await page.locator('a.card-box:has-text("Book Appointment")').click();
+
+            // Book Appointment button multiple selectors se try karo
+            try {
+                await page.locator('a.card-box:has-text("Book Appointment")').waitFor({ state: 'visible', timeout: 8000 });
+                await page.locator('a.card-box:has-text("Book Appointment")').click();
+            } catch(e) {
+                try {
+                    await page.locator('a:has-text("Book Appointment")').first().waitFor({ state: 'visible', timeout: 5000 });
+                    await page.locator('a:has-text("Book Appointment")').first().click();
+                } catch(e2) {
+                    await page.locator('text=Book Appointment').first().click();
+                }
+            }
+            console.log("Book Appointment clicked.");
             
             try {
                 const closeModal = page.locator('img[class="mod-close"]');
@@ -84,7 +95,7 @@ async function playWrightUpdate() {
             await page.locator('input[placeholder="Passport Number"]').waitFor({ state: 'visible' });
             await page.locator('input[placeholder="Passport Number"]').fill(passport_number);
             await page.locator('input[placeholder="Visa Number"]').fill(visa_number);
-            await page.locator('input[placeholder="Enter Captcha"]').fill(code); // ✅ Case sensitive fix
+            await page.locator('input[placeholder="Enter Captcha"]').fill(code);
             
             await page.locator('button.btn-brand-arrow').filter({ hasText: /Submit|Next/i }).first().click().catch(async () => {
                 await page.locator('button.btn-brand-arrow.mb-25.mt-25').click();
@@ -101,7 +112,7 @@ async function playWrightUpdate() {
                 const src2 = await secondCaptchaImage.getAttribute("src");
                 const path2 = await DownloadCaptcha(src2);
                 const code2 = await run(path2);
-                await page.locator('input[placeholder="Enter Captcha"]').fill(code2); // ✅ Case sensitive fix
+                await page.locator('input[placeholder="Enter Captcha"]').fill(code2);
                 
                 await page.locator("button.btn-brand-arrow.mb-25.mt-25").click();
             } catch (err) {}
@@ -183,7 +194,7 @@ async function playWrightUpdate() {
                             
                             await nextBtn.click();
                             
-                            const networkResp = await responsePromise; // ✅ Bug fixed
+                            const networkResp = await responsePromise;
                             
                             if (networkResp) {
                                 await page.waitForTimeout(Math.random() * 1000 + 1000); 
