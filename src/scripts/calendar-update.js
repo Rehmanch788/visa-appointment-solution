@@ -73,7 +73,7 @@ async function playWrightUpdate() {
             await page.locator('input[placeholder="Passport Number"]').waitFor({ state: 'visible' });
             await page.locator('input[placeholder="Passport Number"]').fill(passport_number);
             await page.locator('input[placeholder="Visa Number"]').fill(visa_number);
-            await page.locator('input[placeholder="Enter Captcha"]').fill(code.toUpperCase());
+            await page.locator('input[placeholder="Enter Captcha"]').fill(code); // ✅ Case sensitive fix
             
             await page.locator('button.btn-brand-arrow').filter({ hasText: /Submit|Next/i }).first().click().catch(async () => {
                 await page.locator('button.btn-brand-arrow.mb-25.mt-25').click();
@@ -90,7 +90,7 @@ async function playWrightUpdate() {
                 const src2 = await secondCaptchaImage.getAttribute("src");
                 const path2 = await DownloadCaptcha(src2);
                 const code2 = await run(path2);
-                await page.locator('input[placeholder="Enter Captcha"]').fill(code2.toUpperCase());
+                await page.locator('input[placeholder="Enter Captcha"]').fill(code2); // ✅ Case sensitive fix
                 
                 await page.locator("button.btn-brand-arrow.mb-25.mt-25").click();
             } catch (err) {}
@@ -102,8 +102,8 @@ async function playWrightUpdate() {
             } catch (e) {}
 
             await page.locator('input[id="phone"]').waitFor({ state: 'visible' });
-            await page.locator('input[id="phone"]').fill(process.env.PHONE_NUMBER);
-            await page.locator('input[id="email"]').fill(process.env.EMAIL);
+            await page.locator('input[id="phone"]').fill(process.env.PHONE_NUMBER); // ✅ .env se
+            await page.locator('input[id="email"]').fill(process.env.EMAIL); // ✅ .env se
             await page.locator('input[id="checkVal"]').check();
 
             const confirmBtn = page.locator('button[translate="schedule.confirm_applicant"]', { hasText: /I confirm that the details above are accurate/i });
@@ -172,7 +172,7 @@ async function playWrightUpdate() {
                             
                             await nextBtn.click();
                             
-                            const networkResp = await responsePromise; // ✅ BUG FIXED
+                            const networkResp = await responsePromise; // ✅ Bug fixed
                             
                             if (networkResp) {
                                 await page.waitForTimeout(Math.random() * 1000 + 1000); 
