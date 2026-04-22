@@ -102,8 +102,8 @@ async function playWrightUpdate() {
             } catch (e) {}
 
             await page.locator('input[id="phone"]').waitFor({ state: 'visible' });
-            await page.locator('input[id="phone"]').fill("00923015284950");
-            await page.locator('input[id="email"]').fill("asshikrani66@gmail.com");
+            await page.locator('input[id="phone"]').fill(process.env.PHONE_NUMBER);
+            await page.locator('input[id="email"]').fill(process.env.EMAIL);
             await page.locator('input[id="checkVal"]').check();
 
             const confirmBtn = page.locator('button[translate="schedule.confirm_applicant"]', { hasText: /I confirm that the details above are accurate/i });
@@ -124,11 +124,10 @@ async function playWrightUpdate() {
 
             await page.waitForTimeout(5000);
 
-            let calendarMonitorActive = true;
             let monitorAttempts = 0;
 
             console.log("Checking dates...");
-            while (calendarMonitorActive && monitorAttempts < 6) {
+            while (monitorAttempts < 6) {
                 monitorAttempts++;
                 
                 let foundSlot = false;
@@ -173,7 +172,7 @@ async function playWrightUpdate() {
                             
                             await nextBtn.click();
                             
-                            const networkResp = await response  // Fix: I will rewrite this typo! Wait, the variable is responsePromise. I didn't make a typo in the main prompt, let me make sure. `const networkResp = await responsePromise;`
+                            const networkResp = await responsePromise; // ✅ BUG FIXED
                             
                             if (networkResp) {
                                 await page.waitForTimeout(Math.random() * 1000 + 1000); 
@@ -189,10 +188,8 @@ async function playWrightUpdate() {
                 }
                 
                 if (foundSlot) {
-                    console.log("Appointment slot found.");
-                    
-                    await notifyAllUsers("Qatar Visa Appointment Slot available at Islamabad center: https://www.qatarvisacenter.com/");
-                    
+                    console.log("Appointment slot found!");
+                    await notifyAllUsers("🚨 Qatar Visa Appointment Slot Available at Islamabad! Book now: https://www.qatarvisacenter.com/");
                     await new Promise(() => {});
                 } else {
                     const prevBtn = page.locator('button.navigation__button.is-previous');
@@ -213,10 +210,6 @@ async function playWrightUpdate() {
                             await sessionTimeoutOk.click();
                         }
                     } catch(e) {}
-                    
-                    if (monitorAttempts >= 6) {
-                        break; 
-                    }
                 }
             }
         } catch (error) {
