@@ -40,6 +40,17 @@ async function playWrightUpdate() {
 
             console.log("Loading QVC...");
             await page.goto("https://www.qatarvisacenter.com/");
+
+            // Service Not Available modal band karo
+            try {
+                const serviceNotAvail = page.locator('modal#modalServiceNotAvail button:has-text("Close")');
+                await serviceNotAvail.waitFor({ state: "visible", timeout: 8000 });
+                await serviceNotAvail.click();
+                console.log("Service modal closed.");
+                await page.waitForTimeout(1000);
+            } catch (e) {
+                console.log("No service modal, continuing...");
+            }
             
             await page.locator('div[data-bs-toggle="dropdown"]').waitFor({ state: 'visible' });
             await page.locator('div[data-bs-toggle="dropdown"]').click();
@@ -102,8 +113,8 @@ async function playWrightUpdate() {
             } catch (e) {}
 
             await page.locator('input[id="phone"]').waitFor({ state: 'visible' });
-            await page.locator('input[id="phone"]').fill(process.env.PHONE_NUMBER); // ✅ .env se
-            await page.locator('input[id="email"]').fill(process.env.EMAIL); // ✅ .env se
+            await page.locator('input[id="phone"]').fill(process.env.PHONE_NUMBER);
+            await page.locator('input[id="email"]').fill(process.env.EMAIL);
             await page.locator('input[id="checkVal"]').check();
 
             const confirmBtn = page.locator('button[translate="schedule.confirm_applicant"]', { hasText: /I confirm that the details above are accurate/i });
